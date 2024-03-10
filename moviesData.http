@@ -1,7 +1,7 @@
 GET http://localhost:3000/movies
 
 ###
-GET http://localhost:3000/movies/84
+GET http://localhost:3000/movies/99
 
 ###
 post http://localhost:3000/movies
@@ -16,4 +16,4 @@ delete http://localhost:3000/movies/56
 get http://localhost:3000/directors
 
 ### 
-get http://localhost:3000/directors/10/movies/
+get http://localhost:3000/directors/36/movies/
