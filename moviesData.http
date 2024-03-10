@@ -17,3 +17,5 @@ get http://localhost:3000/directors
 
 ### 
 get http://localhost:3000/directors/36/movies/
+
+pre view
