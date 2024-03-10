@@ -24,21 +24,46 @@ const initializeDBAndServer = async () => {
     process.exit(1)
   }
 }
-initializeDBAndServer(
+initializeDBAndServer()
+//  Returns a list of all movie names in the movie table
+const listOfAllMovieName = movieName => {
+  return {
+    movieName: movieName.movie_name,
+  }
+}
+
+// Get list of Movies
+app.get('/movies', async (request, response) => {
+  const getMoviesQuery = `
+  SELECT * FROM movie WHERE movie_id;
+  `
+  const movieList = await db.all(getMoviesQuery)
+  const responseObject = movieList.map(listOfAllMovieName)
+  response.send(responseObject)
 })
 
 // Post Adding a movie Details
 app.post('/movies', async (request, response) => {
   const movieDetails = request.body
-  const {movie_name, director_id, lead_actor} = movieDetails
+  const {movieName, directorId, leadActor} = movieDetails
 
   const postMovie = `
     INSERT INTO movie (movie_name, director_id, lead_actor)
     VALUES (?, ?, ?);
   `
-  await db.run(postMovie, [movie_name, director_id, lead_actor])
+  await db.run(postMovie, [movieName, directorId, leadActor])
   response.send('Movie Successfully Added')
 })
+
+// conconvertResponseObjectToObject
+const convertResponseObjectToObject = dbObject => {
+  return {
+    movieId: dbObject.movie_id,
+    directorId: dbObject.director_id,
+    movieName: dbObject.movie_name,
+    leadActor: dbObject.lead_actor,
+  }
+}
 
 // Get particular movie
 app.get('/movies/:movieId', async (request, response) => {
@@ -49,19 +74,19 @@ app.get('/movies/:movieId', async (request, response) => {
     WHERE movie_id = '${movieId}';
   `
   const movie = await db.get(getMovieDetails)
-  response.send(movie)
+  response.send(convertResponseObjectToObject(movie))
 })
 
 // Update using putMethod
 app.put('/movies/:movieId', async (request, response) => {
   const {movieId} = request.params
-  const {movie_name, director_id, lead_actor} = request.body
+  const {movieName, directorId, leadActor} = request.body
   const updateMovieById = `
     UPDATE movie
     SET movie_name = ?, director_id = ?, lead_actor = ?
     WHERE movie_id = ?;
   `
-  await db.run(updateMovieById, [movie_name, director_id, lead_actor, movieId])
+  await db.run(updateMovieById, [movieName, directorId, leadActor, movieId])
   response.send('Movie Details Updated')
 })
 
@@ -76,6 +101,14 @@ app.delete('/movies/:movieId', async (request, response) => {
   response.send('Movie Removed')
 })
 
+// convertDirectorSnake_CaceToCamel_Came
+const convertDbObjectToResponseObject = dbObject => {
+  return {
+    directorId: dbObject.director_id,
+    directorName: dbObject.director_name,
+  }
+}
+
 // Get list of directors
 app.get('/directors', async (request, response) => {
   const getListDirectors = `
@@ -83,19 +116,24 @@ app.get('/directors', async (request, response) => {
     FROM director;
   `
   const directors = await db.all(getListDirectors)
-  response.send(directors)
+  response.send(directors.map(convertDbObjectToResponseObject))
 })
-
+const getmovieByDirctorId = dbObject => {
+  return {
+    movieName: dbObject.movie_name,
+  }
+}
 // Get movies by a particular director ID
 app.get('/directors/:directorId/movies', async (request, response) => {
   const {directorId} = request.params
   const getDirectorMovies = `
     SELECT movie_name
     FROM movie
-    WHERE director_id = ?;
+    WHERE director_id = ${directorId};
+    ;
   `
-  const movies = await db.all(getDirectorMovies, [directorId])
-  response.send(movies)
+  const movies = await db.all(getDirectorMovies)
+  response.send(movies.map(getmovieByDirctorId))
 })
 
 module.exports = app
